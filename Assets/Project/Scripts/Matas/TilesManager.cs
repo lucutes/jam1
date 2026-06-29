@@ -25,16 +25,17 @@ namespace Project.Scripts.Matas
 
         [Header("Animation")] [SerializeField] private float _swapAnimationDuration = 0.2f;
 
+        [Header("Lock Overlay")] [SerializeField]
+        private GameObject _lockOverlayPrefab;
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
-
         private int _gridSize;
+        private GameObject[] _lockOverlays;
         private int _selectedIndex = -1;
         private GameObject[] _tilePrefabs;
-
         private GameObject[] _tilePrefabsUI;
-
         private TileState[] _tileStates;
 
 
@@ -44,7 +45,7 @@ namespace Project.Scripts.Matas
             GetWorldTiles();
 
             _gridSize = Mathf.CeilToInt(Mathf.Sqrt(_tilePrefabsUI.Length));
-
+            _lockOverlays = new GameObject[_tilePrefabsUI.Length];
             _tileStates = new TileState[_tilePrefabsUI.Length];
 
             SetupUITiles();
@@ -155,8 +156,6 @@ namespace Project.Scripts.Matas
         {
             for (var i = 0; i < _tilePrefabsUI.Length; i++)
             {
-                if (_tilePrefabsUI[i] == null) continue;
-
                 var tile = _tilePrefabsUI[i];
 
                 var rect =
@@ -171,6 +170,7 @@ namespace Project.Scripts.Matas
                 rect.sizeDelta =
                     Vector2.one * _tileSizeUI;
 
+
                 var image = tile.GetComponent<Image>();
 
                 if (image != null)
@@ -178,14 +178,52 @@ namespace Project.Scripts.Matas
                     image.raycastTarget = true;
 
                     var color = image.color;
-                    color.a = image.sprite == null ? 0.01f : 1f;
+                    color.a = image.sprite == null ? 0f : 1f;
+
                     image.color = color;
                 }
 
                 AddDragHandler(tile, i);
 
                 MoveUITile(i);
+
+                if (_lockOverlayPrefab != null)
+                {
+                    var overlay =
+                        Instantiate(_lockOverlayPrefab, tile.transform);
+
+                    var rt =
+                        overlay.GetComponent<RectTransform>();
+
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = Vector2.one;
+                    rt.offsetMin = Vector2.zero;
+                    rt.offsetMax = Vector2.zero;
+
+                    overlay.SetActive(false);
+
+                    _lockOverlays[i] = overlay;
+                }
+
+                if (_tileStates != null &&
+                    i < _tileStates.Length &&
+                    _tileStates[i].IsLocked)
+                    if (_lockOverlays != null &&
+                        _lockOverlays[i] != null)
+                        _lockOverlays[i].SetActive(true);
             }
+        }
+
+        public void SetTileLocked(int index, bool locked)
+        {
+            if (index < 0 || index >= _tileStates.Length)
+                return;
+
+            _tileStates[index].IsLocked = locked;
+
+            if (_lockOverlays != null &&
+                _lockOverlays[index] != null)
+                _lockOverlays[index].SetActive(locked);
         }
 
         private void SetupWorldTiles()
@@ -419,8 +457,8 @@ namespace Project.Scripts.Matas
 
         public void DropTile(int targetIndex)
         {
-            if (_dragIndex == -1 ||
-                _dragIndex == targetIndex)
+            if (_tileStates[_dragIndex].IsLocked ||
+                _tileStates[targetIndex].IsLocked)
             {
                 _dragIndex = -1;
                 return;
@@ -486,12 +524,17 @@ namespace Project.Scripts.Matas
 
         private bool IsTileSelectable(int index)
         {
-            if (index < 0 || index >= _tilePrefabsUI.Length) return false;
+            if (index < 0 || index >= _tileStates.Length)
+                return false;
+
+            if (_tileStates[index].IsLocked)
+                return false;
 
             var img =
                 _tilePrefabsUI[index].GetComponent<Image>();
 
-            if (img == null) return false;
+            if (img == null)
+                return false;
 
             return img.sprite != null;
         }
@@ -499,6 +542,7 @@ namespace Project.Scripts.Matas
 
     public struct TileState
     {
-        public float Rotation { get; set; } // UI rotation in degrees (Z)
+        public float Rotation { get; set; }
+        public bool IsLocked { get; set; }
     }
 }
