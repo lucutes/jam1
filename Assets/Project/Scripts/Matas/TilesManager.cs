@@ -57,7 +57,6 @@ namespace Project.Scripts.Matas
             }
         }
 
-
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Tab))
@@ -141,7 +140,6 @@ namespace Project.Scripts.Matas
             tile.rotation = targetRot;
         }
 
-
         private void GetWorldTiles()
         {
             var count = _tilesParent.transform.childCount;
@@ -152,7 +150,6 @@ namespace Project.Scripts.Matas
                 _tilePrefabs[i] =
                     _tilesParent.transform.GetChild(i).gameObject;
         }
-
 
         private void SetupUITiles()
         {
@@ -174,7 +171,6 @@ namespace Project.Scripts.Matas
                 rect.sizeDelta =
                     Vector2.one * _tileSizeUI;
 
-
                 var image = tile.GetComponent<Image>();
 
                 if (image != null)
@@ -182,7 +178,7 @@ namespace Project.Scripts.Matas
                     image.raycastTarget = true;
 
                     var color = image.color;
-                    color.a = image.sprite == null ? 0f : 1f;
+                    color.a = image.sprite == null ? 0.01f : 1f;
                     image.color = color;
                 }
 
@@ -192,15 +188,15 @@ namespace Project.Scripts.Matas
             }
         }
 
-
         private void SetupWorldTiles()
         {
             for (var i = 0; i < _tilePrefabs.Length; i++) MoveWorldTile(i);
         }
 
-
         public void SelectTile(int index)
         {
+            if (!IsTileSelectable(index)) return;
+
             _selectedIndex = index;
 
             if (_selectionOverlay == null) return;
@@ -222,7 +218,6 @@ namespace Project.Scripts.Matas
                 _tilePrefabsUI[i] =
                     _mapOverlay.transform.GetChild(i).gameObject;
         }
-
 
         private Vector2 GetUITilePosition(int index)
         {
@@ -250,7 +245,6 @@ namespace Project.Scripts.Matas
                 startY - y * (_tileSizeUI + _verticalGapUI)
             );
         }
-
 
         private Vector3 GetWorldTilePosition(int index)
         {
@@ -283,7 +277,6 @@ namespace Project.Scripts.Matas
             );
         }
 
-
         private void MoveUITile(int index)
         {
             var rect =
@@ -297,7 +290,6 @@ namespace Project.Scripts.Matas
                     0f,
                     -_tileStates[index].Rotation);
         }
-
 
         private IEnumerator AnimateUITile(int index)
         {
@@ -330,7 +322,6 @@ namespace Project.Scripts.Matas
 
             rect.anchoredPosition = target;
         }
-
 
         private IEnumerator AnimateSelectionOverlay()
         {
@@ -365,7 +356,6 @@ namespace Project.Scripts.Matas
             _selectionOverlay.SetAsLastSibling();
         }
 
-
         private void MoveWorldTile(int index)
         {
             var tile =
@@ -376,7 +366,6 @@ namespace Project.Scripts.Matas
             tile.rotation =
                 Quaternion.Euler(0f, _tileStates[index].Rotation, 0f);
         }
-
 
         private IEnumerator AnimateWorldTile(int index)
         {
@@ -421,13 +410,12 @@ namespace Project.Scripts.Matas
             handler.Initialize(this, index);
         }
 
-
         public void StartDrag(int index)
         {
             _dragIndex = index;
-            SelectTile(index);
-        }
 
+            if (IsTileSelectable(index)) SelectTile(index);
+        }
 
         public void DropTile(int targetIndex)
         {
@@ -469,7 +457,6 @@ namespace Project.Scripts.Matas
             _dragIndex = -1;
         }
 
-
         private void RefreshHierarchies()
         {
             for (var i = 0; i < _tilePrefabsUI.Length; i++)
@@ -485,7 +472,6 @@ namespace Project.Scripts.Matas
                     .SetSiblingIndex(i);
         }
 
-
         private void RefreshTileIndices()
         {
             for (var i = 0; i < _tilePrefabsUI.Length; i++)
@@ -496,6 +482,18 @@ namespace Project.Scripts.Matas
 
                 if (handler != null) handler.UpdateIndex(i);
             }
+        }
+
+        private bool IsTileSelectable(int index)
+        {
+            if (index < 0 || index >= _tilePrefabsUI.Length) return false;
+
+            var img =
+                _tilePrefabsUI[index].GetComponent<Image>();
+
+            if (img == null) return false;
+
+            return img.sprite != null;
         }
     }
 
