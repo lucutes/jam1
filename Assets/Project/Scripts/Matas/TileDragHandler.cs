@@ -7,7 +7,8 @@ namespace Project.Scripts.Matas
         IBeginDragHandler,
         IDragHandler,
         IEndDragHandler,
-        IDropHandler
+        IDropHandler,
+        IPointerClickHandler
     {
         private TilesManager _manager;
         private int _index;
@@ -60,6 +61,15 @@ namespace Project.Scripts.Matas
         public void OnDrop(PointerEventData eventData)
         {
             _manager.DropTile(_index);
+        }
+
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                _manager.SelectTile(_index);
+            }
         }
     }
 }

@@ -6,30 +6,36 @@ namespace Project.Scripts.Matas
 {
     public class TilesManager : MonoBehaviour
     {
-        [Header("UI")]
-        [SerializeField] private GameObject _mapOverlay;
+        [Header("UI")] [SerializeField] private GameObject _mapOverlay;
 
-        [Header("World")]
-        [SerializeField] private GameObject _tilesParent;
+        [Header("Selection")] [SerializeField] private RectTransform _selectionOverlay;
 
-        [Header("UI Grid")]
-        [SerializeField] private float _tileSizeUI = 64f;
+        [Header("World")] [SerializeField] private GameObject _tilesParent;
+
+        [Header("UI Grid")] [SerializeField] private float _tileSizeUI = 64f;
+
         [SerializeField] private float _horizontalGapUI = 8f;
         [SerializeField] private float _verticalGapUI = 8f;
 
-        [Header("World Grid")]
-        [SerializeField] private float _tileSizeWorld = 1f;
+        [Header("World Grid")] [SerializeField]
+        private float _tileSizeWorld = 1f;
+
         [SerializeField] private float _horizontalGapWorld = 0.1f;
         [SerializeField] private float _verticalGapWorld = 0.1f;
 
-        [Header("Animation")]
-        [SerializeField] private float _swapAnimationDuration = 0.2f;
+        [Header("Animation")] [SerializeField] private float _swapAnimationDuration = 0.2f;
 
-        private GameObject[] _tilePrefabsUI;
-        private GameObject[] _tilePrefabs;
+        //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
+
+        private int _dragIndex = -1;
 
         private int _gridSize;
-        private int _dragIndex = -1;
+        private int _selectedIndex = -1;
+        private GameObject[] _tilePrefabs;
+
+        private GameObject[] _tilePrefabsUI;
+
+        private TileState[] _tileStates;
 
 
         private void Start()
@@ -39,65 +45,143 @@ namespace Project.Scripts.Matas
 
             _gridSize = Mathf.CeilToInt(Mathf.Sqrt(_tilePrefabsUI.Length));
 
+            _tileStates = new TileState[_tilePrefabsUI.Length];
+
             SetupUITiles();
             SetupWorldTiles();
+
+            if (_selectionOverlay != null)
+            {
+                _selectionOverlay.gameObject.SetActive(false);
+                _selectionOverlay.SetAsLastSibling();
+            }
         }
 
 
-        private void GetUITiles()
+        private void Update()
         {
-            int count = _mapOverlay.transform.childCount;
+            if (Input.GetKeyDown(KeyCode.Tab))
+                _mapOverlay.SetActive(
+                    !_mapOverlay.activeSelf);
 
-            _tilePrefabsUI = new GameObject[count];
+            if (Input.GetKeyDown(KeyCode.Q)) RotateSelectedTile(false);
 
-            for (int i = 0; i < count; i++)
+            if (Input.GetKeyDown(KeyCode.E)) RotateSelectedTile(true);
+        }
+
+        private void RotateSelectedTile(bool clockwise)
+        {
+            if (_selectedIndex < 0) return;
+
+            if (clockwise)
+                _tileStates[_selectedIndex].Rotation =
+                    (_tileStates[_selectedIndex].Rotation + 90f) % 360f;
+            else
+                _tileStates[_selectedIndex].Rotation =
+                    (_tileStates[_selectedIndex].Rotation + 270f) % 360f;
+
+            StartCoroutine(RotateUITile(_selectedIndex));
+            StartCoroutine(RotateWorldTile(_selectedIndex));
+        }
+
+        private IEnumerator RotateUITile(int index)
+        {
+            var rect =
+                _tilePrefabsUI[index].GetComponent<RectTransform>();
+
+            var startRot = rect.localRotation;
+
+            var targetRot =
+                Quaternion.Euler(
+                    0f,
+                    0f,
+                    -_tileStates[index].Rotation);
+
+            var time = 0f;
+
+            while (time < _swapAnimationDuration)
             {
-                _tilePrefabsUI[i] =
-                    _mapOverlay.transform.GetChild(i).gameObject;
+                time += Time.deltaTime;
+
+                var t = Mathf.SmoothStep(0f, 1f, time / _swapAnimationDuration);
+
+                rect.localRotation =
+                    Quaternion.Slerp(startRot, targetRot, t);
+
+                yield return null;
             }
+
+            rect.localRotation = targetRot;
+        }
+
+        private IEnumerator RotateWorldTile(int index)
+        {
+            var tile =
+                _tilePrefabs[index].transform;
+
+            var startRot = tile.rotation;
+
+            var targetRot =
+                Quaternion.Euler(0f, _tileStates[index].Rotation, 0f);
+
+            var time = 0f;
+
+            while (time < _swapAnimationDuration)
+            {
+                time += Time.deltaTime;
+
+                var t = Mathf.SmoothStep(0f, 1f, time / _swapAnimationDuration);
+
+                tile.rotation =
+                    Quaternion.Slerp(startRot, targetRot, t);
+
+                yield return null;
+            }
+
+            tile.rotation = targetRot;
         }
 
 
         private void GetWorldTiles()
         {
-            int count = _tilesParent.transform.childCount;
+            var count = _tilesParent.transform.childCount;
 
             _tilePrefabs = new GameObject[count];
 
-            for (int i = 0; i < count; i++)
-            {
+            for (var i = 0; i < count; i++)
                 _tilePrefabs[i] =
                     _tilesParent.transform.GetChild(i).gameObject;
-            }
         }
 
 
         private void SetupUITiles()
         {
-            for (int i = 0; i < _tilePrefabsUI.Length; i++)
+            for (var i = 0; i < _tilePrefabsUI.Length; i++)
             {
-                GameObject tile = _tilePrefabsUI[i];
+                if (_tilePrefabsUI[i] == null) continue;
 
-                RectTransform rect =
+                var tile = _tilePrefabsUI[i];
+
+                var rect =
                     tile.GetComponent<RectTransform>();
 
                 rect.localScale = Vector3.one;
                 rect.anchorMin =
                     rect.anchorMax =
-                    rect.pivot =
-                    new Vector2(0.5f, 0.5f);
+                        rect.pivot =
+                            new Vector2(0.5f, 0.5f);
 
                 rect.sizeDelta =
                     Vector2.one * _tileSizeUI;
 
 
-                Image image = tile.GetComponent<Image>();
+                var image = tile.GetComponent<Image>();
 
                 if (image != null)
                 {
                     image.raycastTarget = true;
 
-                    Color color = image.color;
+                    var color = image.color;
                     color.a = image.sprite == null ? 0f : 1f;
                     image.color = color;
                 }
@@ -111,31 +195,53 @@ namespace Project.Scripts.Matas
 
         private void SetupWorldTiles()
         {
-            for (int i = 0; i < _tilePrefabs.Length; i++)
-            {
-                MoveWorldTile(i);
-            }
+            for (var i = 0; i < _tilePrefabs.Length; i++) MoveWorldTile(i);
+        }
+
+
+        public void SelectTile(int index)
+        {
+            _selectedIndex = index;
+
+            if (_selectionOverlay == null) return;
+
+            _selectionOverlay.gameObject.SetActive(true);
+            _selectionOverlay.anchoredPosition =
+                GetUITilePosition(index);
+
+            _selectionOverlay.SetAsLastSibling();
+        }
+
+        private void GetUITiles()
+        {
+            var count = _mapOverlay.transform.childCount;
+
+            _tilePrefabsUI = new GameObject[count];
+
+            for (var i = 0; i < count; i++)
+                _tilePrefabsUI[i] =
+                    _mapOverlay.transform.GetChild(i).gameObject;
         }
 
 
         private Vector2 GetUITilePosition(int index)
         {
-            int x = index % _gridSize;
-            int y = index / _gridSize;
+            var x = index % _gridSize;
+            var y = index / _gridSize;
 
-            float totalWidth =
+            var totalWidth =
                 _gridSize * _tileSizeUI +
                 (_gridSize - 1) * _horizontalGapUI;
 
-            float totalHeight =
+            var totalHeight =
                 _gridSize * _tileSizeUI +
                 (_gridSize - 1) * _verticalGapUI;
 
-            float startX =
+            var startX =
                 -totalWidth * 0.5f +
                 _tileSizeUI * 0.5f;
 
-            float startY =
+            var startY =
                 totalHeight * 0.5f -
                 _tileSizeUI * 0.5f;
 
@@ -148,26 +254,26 @@ namespace Project.Scripts.Matas
 
         private Vector3 GetWorldTilePosition(int index)
         {
-            int x = index % _gridSize;
-            int y = index / _gridSize;
+            var x = index % _gridSize;
+            var y = index / _gridSize;
 
-            float totalWidth =
+            var totalWidth =
                 _gridSize * _tileSizeWorld +
                 (_gridSize - 1) * _horizontalGapWorld;
 
-            float totalHeight =
+            var totalHeight =
                 _gridSize * _tileSizeWorld +
                 (_gridSize - 1) * _verticalGapWorld;
 
-            float startX =
+            var startX =
                 -totalWidth * 0.5f +
                 _tileSizeWorld * 0.5f;
 
-            float startZ =
+            var startZ =
                 totalHeight * 0.5f -
                 _tileSizeWorld * 0.5f;
 
-            Transform tile =
+            var tile =
                 _tilePrefabs[index].transform;
 
             return new Vector3(
@@ -180,34 +286,38 @@ namespace Project.Scripts.Matas
 
         private void MoveUITile(int index)
         {
-            RectTransform rect =
-                _tilePrefabsUI[index]
-                    .GetComponent<RectTransform>();
+            var rect =
+                _tilePrefabsUI[index].GetComponent<RectTransform>();
 
-            rect.anchoredPosition =
-                GetUITilePosition(index);
+            rect.anchoredPosition = GetUITilePosition(index);
+
+            rect.localRotation =
+                Quaternion.Euler(
+                    0f,
+                    0f,
+                    -_tileStates[index].Rotation);
         }
 
 
         private IEnumerator AnimateUITile(int index)
         {
-            RectTransform rect =
+            var rect =
                 _tilePrefabsUI[index]
                     .GetComponent<RectTransform>();
 
-            Vector2 start =
+            var start =
                 rect.anchoredPosition;
 
-            Vector2 target =
+            var target =
                 GetUITilePosition(index);
 
-            float time = 0f;
+            var time = 0f;
 
             while (time < _swapAnimationDuration)
             {
                 time += Time.deltaTime;
 
-                float t = Mathf.SmoothStep(
+                var t = Mathf.SmoothStep(
                     0f,
                     1f,
                     time / _swapAnimationDuration);
@@ -222,31 +332,70 @@ namespace Project.Scripts.Matas
         }
 
 
-        private void MoveWorldTile(int index)
+        private IEnumerator AnimateSelectionOverlay()
         {
-            _tilePrefabs[index].transform.position =
-                GetWorldTilePosition(index);
-        }
+            if (_selectionOverlay == null ||
+                _selectedIndex < 0)
+                yield break;
 
+            var start =
+                _selectionOverlay.anchoredPosition;
 
-        private IEnumerator AnimateWorldTile(int index)
-        {
-            Transform tile =
-                _tilePrefabs[index].transform;
+            var target =
+                GetUITilePosition(_selectedIndex);
 
-            Vector3 start =
-                tile.position;
-
-            Vector3 target =
-                GetWorldTilePosition(index);
-
-            float time = 0f;
+            var time = 0f;
 
             while (time < _swapAnimationDuration)
             {
                 time += Time.deltaTime;
 
-                float t = Mathf.SmoothStep(
+                var t = Mathf.SmoothStep(
+                    0f,
+                    1f,
+                    time / _swapAnimationDuration);
+
+                _selectionOverlay.anchoredPosition =
+                    Vector2.Lerp(start, target, t);
+
+                yield return null;
+            }
+
+            _selectionOverlay.anchoredPosition = target;
+            _selectionOverlay.SetAsLastSibling();
+        }
+
+
+        private void MoveWorldTile(int index)
+        {
+            var tile =
+                _tilePrefabs[index].transform;
+
+            tile.position = GetWorldTilePosition(index);
+
+            tile.rotation =
+                Quaternion.Euler(0f, _tileStates[index].Rotation, 0f);
+        }
+
+
+        private IEnumerator AnimateWorldTile(int index)
+        {
+            var tile =
+                _tilePrefabs[index].transform;
+
+            var start =
+                tile.position;
+
+            var target =
+                GetWorldTilePosition(index);
+
+            var time = 0f;
+
+            while (time < _swapAnimationDuration)
+            {
+                time += Time.deltaTime;
+
+                var t = Mathf.SmoothStep(
                     0f,
                     1f,
                     time / _swapAnimationDuration);
@@ -260,17 +409,14 @@ namespace Project.Scripts.Matas
             tile.position = target;
         }
 
-
         private void AddDragHandler(GameObject tile, int index)
         {
-            TileDragHandler handler =
+            var handler =
                 tile.GetComponent<TileDragHandler>();
 
             if (handler == null)
-            {
                 handler =
                     tile.AddComponent<TileDragHandler>();
-            }
 
             handler.Initialize(this, index);
         }
@@ -279,6 +425,7 @@ namespace Project.Scripts.Matas
         public void StartDrag(int index)
         {
             _dragIndex = index;
+            SelectTile(index);
         }
 
 
@@ -291,21 +438,22 @@ namespace Project.Scripts.Matas
                 return;
             }
 
-
             (_tilePrefabsUI[_dragIndex],
-                _tilePrefabsUI[targetIndex]) =
+                    _tilePrefabsUI[targetIndex]) =
                 (_tilePrefabsUI[targetIndex],
-                _tilePrefabsUI[_dragIndex]);
-
+                    _tilePrefabsUI[_dragIndex]);
 
             (_tilePrefabs[_dragIndex],
-                _tilePrefabs[targetIndex]) =
+                    _tilePrefabs[targetIndex]) =
                 (_tilePrefabs[targetIndex],
-                _tilePrefabs[_dragIndex]);
+                    _tilePrefabs[_dragIndex]);
 
+            (_tileStates[_dragIndex],
+                    _tileStates[targetIndex]) =
+                (_tileStates[targetIndex],
+                    _tileStates[_dragIndex]);
 
             RefreshHierarchies();
-
 
             StartCoroutine(AnimateUITile(_dragIndex));
             StartCoroutine(AnimateUITile(targetIndex));
@@ -313,6 +461,8 @@ namespace Project.Scripts.Matas
             StartCoroutine(AnimateWorldTile(_dragIndex));
             StartCoroutine(AnimateWorldTile(targetIndex));
 
+            _selectedIndex = targetIndex;
+            StartCoroutine(AnimateSelectionOverlay());
 
             RefreshTileIndices();
 
@@ -322,45 +472,35 @@ namespace Project.Scripts.Matas
 
         private void RefreshHierarchies()
         {
-            for (int i = 0; i < _tilePrefabsUI.Length; i++)
-            {
+            for (var i = 0; i < _tilePrefabsUI.Length; i++)
                 _tilePrefabsUI[i]
                     .transform
                     .SetSiblingIndex(i);
-            }
 
-            for (int i = 0; i < _tilePrefabs.Length; i++)
-            {
+            if (_selectionOverlay != null) _selectionOverlay.SetAsLastSibling();
+
+            for (var i = 0; i < _tilePrefabs.Length; i++)
                 _tilePrefabs[i]
                     .transform
                     .SetSiblingIndex(i);
-            }
         }
 
 
         private void RefreshTileIndices()
         {
-            for (int i = 0; i < _tilePrefabsUI.Length; i++)
+            for (var i = 0; i < _tilePrefabsUI.Length; i++)
             {
-                TileDragHandler handler =
+                var handler =
                     _tilePrefabsUI[i]
                         .GetComponent<TileDragHandler>();
 
-                if (handler != null)
-                {
-                    handler.UpdateIndex(i);
-                }
+                if (handler != null) handler.UpdateIndex(i);
             }
         }
+    }
 
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Tab))
-            {
-                _mapOverlay.SetActive(
-                    !_mapOverlay.activeSelf);
-            }
-        }
+    public struct TileState
+    {
+        public float Rotation { get; set; } // UI rotation in degrees (Z)
     }
 }
