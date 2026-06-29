@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Project.Scripts.Matas
 {
     [RequireComponent(typeof(Rigidbody))]
-    public class CharacterController : MonoBehaviour
+    public class CharacterController2D : MonoBehaviour
     {
         public float moveSpeed = 5f;
 
