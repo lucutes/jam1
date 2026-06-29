@@ -2960,6 +2960,110 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705161774}
   m_CullTransparentMesh: 1
+--- !u!1 &721516721
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 721516722}
+  - component: {fileID: 721516724}
+  - component: {fileID: 721516723}
+  - component: {fileID: 721516725}
+  m_Layer: 0
+  m_Name: Cursor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &721516722
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721516721}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1201115288}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &721516723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721516721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 1169034316, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &721516724
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721516721}
+  m_CullTransparentMesh: 1
+--- !u!114 &721516725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721516721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e39f8f355c31f4fb40806e9ff10795, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomCursorController
+  _cursorImage: {fileID: 721516723}
+  _idleFrames:
+  - {fileID: 1169034316, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: 1661554151, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: 1188925195, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: -1899710815, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: -1663338268, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: 1418265252, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  _clickFrames:
+  - {fileID: 2123872151, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: 2070649878, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: 1464333295, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: 703688499, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: -1544327149, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  - {fileID: 455613233, guid: fbfcac280154cc74fba676c27915690b, type: 3}
+  _frameRate: 0.1
 --- !u!1 &722216115
 GameObject:
   m_ObjectHideFlags: 0
@@ -3243,7 +3347,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -1457306127, guid: a61b07912e3dda349beaa2dc12bfcc8b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5246,6 +5350,7 @@ RectTransform:
   - {fileID: 1852761507}
   - {fileID: 790742863}
   - {fileID: 744305160}
+  - {fileID: 721516722}
   m_Father: {fileID: 374924044}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
