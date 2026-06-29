@@ -1,102 +1,103 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
-public class CharacterController : MonoBehaviour
+namespace Project.Scripts.Matas
 {
-    public float moveSpeed = 5f;
-
-    [Header("Sprite")]
-    public bool flipSpriteWhenMovingLeft = true;
-
-    [Header("Animation Sprites")]
-    public Sprite[] idleSprites;
-    public Sprite[] walkingSprites;
-
-    public float animationSpeed = 0.15f;
-
-    private Rigidbody rb;
-    private SpriteRenderer spriteRenderer;
-
-    private Vector3 movement;
-
-    private Sprite[] currentAnimation;
-    private int animationFrame;
-    private float animationTimer;
-
-    private void Awake()
+    [RequireComponent(typeof(Rigidbody))]
+    public class CharacterController : MonoBehaviour
     {
-        rb = GetComponent<Rigidbody>();
+        public float moveSpeed = 5f;
 
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        [Header("Sprite")] public bool flipSpriteWhenMovingLeft = true;
 
-        rb.freezeRotation = true;
+        [Header("Animation Sprites")] public Sprite[] idleSprites;
+        public Sprite[] walkingSprites;
 
-        currentAnimation = idleSprites;
-    }
+        public float animationSpeed = 0.15f;
 
-    private void Update()
-    {
-        float x = Input.GetAxisRaw("Horizontal");
-        float z = Input.GetAxisRaw("Vertical");
+        private Rigidbody rb;
+        private SpriteRenderer spriteRenderer;
 
-        movement = new Vector3(x, 0f, z).normalized;
+        private Vector3 movement;
 
-        UpdateSpriteFlip();
-        UpdateAnimation();
-    }
+        private Sprite[] currentAnimation;
+        private int animationFrame;
+        private float animationTimer;
 
-    private void FixedUpdate()
-    {
-        Vector3 newPosition = rb.position + movement * moveSpeed * Time.fixedDeltaTime;
-
-        newPosition.y = rb.position.y;
-
-        rb.MovePosition(newPosition);
-    }
-
-    private void UpdateSpriteFlip()
-    {
-        if (!flipSpriteWhenMovingLeft)
-            return;
-
-        if (movement.x > 0)
+        private void Awake()
         {
-            spriteRenderer.flipX = false;
-        }
-        else if (movement.x < 0)
-        {
-            spriteRenderer.flipX = true;
-        }
-    }
+            rb = GetComponent<Rigidbody>();
 
-    private void UpdateAnimation()
-    {
-        Sprite[] newAnimation = movement.magnitude > 0
-            ? walkingSprites
-            : idleSprites;
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-        if (currentAnimation != newAnimation)
-        {
-            currentAnimation = newAnimation;
-            animationFrame = 0;
-            animationTimer = 0f;
+            rb.freezeRotation = true;
+
+            currentAnimation = idleSprites;
         }
 
-        if (currentAnimation.Length == 0)
-            return;
-
-        animationTimer += Time.deltaTime;
-
-        if (animationTimer >= animationSpeed)
+        private void Update()
         {
-            animationTimer = 0f;
+            float x = Input.GetAxisRaw("Horizontal");
+            float z = Input.GetAxisRaw("Vertical");
 
-            animationFrame++;
+            movement = new Vector3(x, 0f, z).normalized;
 
-            if (animationFrame >= currentAnimation.Length)
+            UpdateSpriteFlip();
+            UpdateAnimation();
+        }
+
+        private void FixedUpdate()
+        {
+            Vector3 newPosition = rb.position + movement * moveSpeed * Time.fixedDeltaTime;
+
+            newPosition.y = rb.position.y;
+
+            rb.MovePosition(newPosition);
+        }
+
+        private void UpdateSpriteFlip()
+        {
+            if (!flipSpriteWhenMovingLeft)
+                return;
+
+            if (movement.x > 0)
+            {
+                spriteRenderer.flipX = false;
+            }
+            else if (movement.x < 0)
+            {
+                spriteRenderer.flipX = true;
+            }
+        }
+
+        private void UpdateAnimation()
+        {
+            Sprite[] newAnimation = movement.magnitude > 0
+                ? walkingSprites
+                : idleSprites;
+
+            if (currentAnimation != newAnimation)
+            {
+                currentAnimation = newAnimation;
                 animationFrame = 0;
+                animationTimer = 0f;
+            }
 
-            spriteRenderer.sprite = currentAnimation[animationFrame];
+            if (currentAnimation.Length == 0)
+                return;
+
+            animationTimer += Time.deltaTime;
+
+            if (animationTimer >= animationSpeed)
+            {
+                animationTimer = 0f;
+
+                animationFrame++;
+
+                if (animationFrame >= currentAnimation.Length)
+                    animationFrame = 0;
+
+                spriteRenderer.sprite = currentAnimation[animationFrame];
+            }
         }
     }
 }
