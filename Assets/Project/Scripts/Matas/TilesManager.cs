@@ -82,6 +82,7 @@ namespace Project.Scripts.Matas
 
             StartCoroutine(RotateUITile(_selectedIndex));
             StartCoroutine(RotateWorldTile(_selectedIndex));
+            StartCoroutine(AnimateSelectionOverlay());
         }
 
         private IEnumerator RotateUITile(int index)
@@ -243,6 +244,12 @@ namespace Project.Scripts.Matas
             _selectionOverlay.anchoredPosition =
                 GetUITilePosition(index);
 
+            _selectionOverlay.localRotation =
+                Quaternion.Euler(
+                    0f,
+                    0f,
+                    -_tileStates[index].Rotation);
+
             _selectionOverlay.SetAsLastSibling();
         }
 
@@ -367,11 +374,20 @@ namespace Project.Scripts.Matas
                 _selectedIndex < 0)
                 yield break;
 
-            var start =
+            var startPos =
                 _selectionOverlay.anchoredPosition;
 
-            var target =
+            var targetPos =
                 GetUITilePosition(_selectedIndex);
+
+            var startRot =
+                _selectionOverlay.localRotation;
+
+            var targetRot =
+                Quaternion.Euler(
+                    0f,
+                    0f,
+                    -_tileStates[_selectedIndex].Rotation);
 
             var time = 0f;
 
@@ -385,12 +401,16 @@ namespace Project.Scripts.Matas
                     time / _swapAnimationDuration);
 
                 _selectionOverlay.anchoredPosition =
-                    Vector2.Lerp(start, target, t);
+                    Vector2.Lerp(startPos, targetPos, t);
+
+                _selectionOverlay.localRotation =
+                    Quaternion.Slerp(startRot, targetRot, t);
 
                 yield return null;
             }
 
-            _selectionOverlay.anchoredPosition = target;
+            _selectionOverlay.anchoredPosition = targetPos;
+            _selectionOverlay.localRotation = targetRot;
             _selectionOverlay.SetAsLastSibling();
         }
 
