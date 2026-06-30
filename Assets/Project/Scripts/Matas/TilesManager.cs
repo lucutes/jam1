@@ -31,6 +31,9 @@ namespace Project.Scripts.Matas
 
         [SerializeField] private bool[] _lockedTiles;
 
+        [Header("Inventory UI")] [SerializeField]
+        private GameObject _inventoryOverlay;
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
@@ -66,8 +69,12 @@ namespace Project.Scripts.Matas
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Tab))
+            {
                 _mapOverlay.SetActive(
                     !_mapOverlay.activeSelf);
+                _inventoryOverlay.SetActive(
+                    !_inventoryOverlay.activeSelf);
+            }
 
             if (Input.GetKeyDown(KeyCode.Q)) RotateSelectedTile(false);
 
@@ -76,8 +83,6 @@ namespace Project.Scripts.Matas
 
         private void OnValidate()
         {
-            if (_mapOverlay == null) return;
-
             var count = _mapOverlay.transform.childCount;
 
             if (_lockedTiles == null ||
