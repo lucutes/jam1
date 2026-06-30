@@ -6,30 +6,30 @@ namespace Project.Scripts.Matas
     [RequireComponent(typeof(Rigidbody))]
     public class CharacterController2D : MonoBehaviour
     {
-        [FormerlySerializedAs("MoveSpeed")]
-        [SerializeField] private float _moveSpeed = 5f;
+        [FormerlySerializedAs("MoveSpeed")] [SerializeField]
+        private float _moveSpeed = 5f;
 
-        [FormerlySerializedAs("flipSpriteWhenMovingLeft")]
-        [Header("Sprite")]
-        [SerializeField] private bool _flipSpriteWhenMovingLeft = true;
+        [FormerlySerializedAs("flipSpriteWhenMovingLeft")] [Header("Sprite")] [SerializeField]
+        private bool _flipSpriteWhenMovingLeft = true;
 
-        [FormerlySerializedAs("idleSprites")]
-        [Header("Animation Sprites")]
-        [SerializeField] private Sprite[] _idleSprites;
+        [FormerlySerializedAs("idleSprites")] [Header("Animation Sprites")] [SerializeField]
+        private Sprite[] _idleSprites;
 
-        [FormerlySerializedAs("walkingSprites")]
-        [SerializeField] private Sprite[] _walkingSprites;
+        [FormerlySerializedAs("walkingSprites")] [SerializeField]
+        private Sprite[] _walkingSprites;
 
         [SerializeField] private float _animationSpeed = 0.15f;
+        private int _animationFrame;
+        private float _animationTimer;
+
+        private Sprite[] _currentAnimation;
+
+        private Vector3 _movement = Vector3.zero;
 
         private Rigidbody _rb;
         private SpriteRenderer _spriteRenderer;
 
-        private Vector3 _movement;
-
-        private Sprite[] _currentAnimation;
-        private int _animationFrame;
-        private float _animationTimer;
+        public bool CanMove { get; set; } = true;
 
         private void Awake()
         {
@@ -48,10 +48,17 @@ namespace Project.Scripts.Matas
 
         private void Update()
         {
-            float x = Input.GetAxisRaw("Horizontal");
-            float z = Input.GetAxisRaw("Vertical");
+            if (CanMove)
+            {
+                var x = Input.GetAxisRaw("Horizontal");
+                var z = Input.GetAxisRaw("Vertical");
 
-            _movement = new Vector3(x, 0f, z).normalized;
+                _movement = new Vector3(x, 0f, z).normalized;
+            }
+            else
+            {
+                _movement = Vector3.zero;
+            }
 
             UpdateSpriteFlip();
             UpdateAnimation();
@@ -59,7 +66,7 @@ namespace Project.Scripts.Matas
 
         private void FixedUpdate()
         {
-            Vector3 targetPosition = _rb.position + _movement * _moveSpeed * Time.fixedDeltaTime;
+            var targetPosition = _rb.position + _movement * _moveSpeed * Time.fixedDeltaTime;
             _rb.MovePosition(targetPosition);
         }
 
@@ -76,7 +83,7 @@ namespace Project.Scripts.Matas
 
         private void UpdateAnimation()
         {
-            Sprite[] newAnimation = _movement.sqrMagnitude > 0f
+            var newAnimation = _movement.sqrMagnitude > 0f
                 ? _walkingSprites
                 : _idleSprites;
 

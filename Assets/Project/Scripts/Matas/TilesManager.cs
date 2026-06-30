@@ -34,6 +34,9 @@ namespace Project.Scripts.Matas
         [Header("Inventory UI")] [SerializeField]
         private GameObject _inventoryOverlay;
 
+        [Header("Character Controller")] [SerializeField]
+        private CharacterController2D _characterController;
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
@@ -74,6 +77,10 @@ namespace Project.Scripts.Matas
                     !_mapOverlay.activeSelf);
                 _inventoryOverlay.SetActive(
                     !_inventoryOverlay.activeSelf);
+
+                _characterController.CanMove = !_mapOverlay.activeSelf;
+
+                if (!_mapOverlay.activeSelf) _selectionOverlay.gameObject.SetActive(false);
             }
 
             if (Input.GetKeyDown(KeyCode.Q)) RotateSelectedTile(false);
