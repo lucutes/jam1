@@ -27,11 +27,6 @@ namespace Project.Scripts.Matas
 
         private void PlayIdleAnimation()
         {
-            if (_idleFrames == null ||
-                _idleFrames.Length == 0 ||
-                _uiImage == null)
-                return;
-
             _timer += Time.deltaTime;
 
             var frameDuration = 1f / _frameRate;
