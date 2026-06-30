@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,6 +29,8 @@ namespace Project.Scripts.Matas
         [Header("Lock Overlay")] [SerializeField]
         private GameObject _lockOverlayPrefab;
 
+        [SerializeField] private bool[] _lockedTiles;
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
@@ -51,6 +54,8 @@ namespace Project.Scripts.Matas
             SetupUITiles();
             SetupWorldTiles();
 
+            InitializeLockedTiles();
+
             if (_selectionOverlay != null)
             {
                 _selectionOverlay.gameObject.SetActive(false);
@@ -67,6 +72,26 @@ namespace Project.Scripts.Matas
             if (Input.GetKeyDown(KeyCode.Q)) RotateSelectedTile(false);
 
             if (Input.GetKeyDown(KeyCode.E)) RotateSelectedTile(true);
+        }
+
+        private void OnValidate()
+        {
+            if (_mapOverlay == null) return;
+
+            var count = _mapOverlay.transform.childCount;
+
+            if (_lockedTiles == null ||
+                _lockedTiles.Length != count)
+                Array.Resize(ref _lockedTiles, count);
+        }
+
+        private void InitializeLockedTiles()
+        {
+            for (var i = 0;
+                 i < _lockedTiles.Length &&
+                 i < _tileStates.Length;
+                 i++)
+                SetTileLocked(i, _lockedTiles[i]);
         }
 
         private void RotateSelectedTile(bool clockwise)

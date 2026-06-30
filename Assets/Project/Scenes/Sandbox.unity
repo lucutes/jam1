@@ -6990,7 +6990,8 @@ MonoBehaviour:
   _horizontalGapWorld: 0.1
   _verticalGapWorld: 0.1
   _swapAnimationDuration: 0.2
-  _lockOverlayPrefab: {fileID: 0}
+  _lockOverlayPrefab: {fileID: 744305159}
+  _lockedTiles: 01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!1 &1513115337
 GameObject:
   m_ObjectHideFlags: 0
