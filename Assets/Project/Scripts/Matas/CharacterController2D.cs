@@ -1,45 +1,49 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Project.Scripts.Matas
 {
     [RequireComponent(typeof(Rigidbody))]
     public class CharacterController2D : MonoBehaviour
     {
-        public float moveSpeed = 5f;
+        [FormerlySerializedAs("MoveSpeed")] [SerializeField]
+        private float _moveSpeed = 5f;
 
-        [Header("Sprite")] public bool flipSpriteWhenMovingLeft = true;
+        [FormerlySerializedAs("flipSpriteWhenMovingLeft")] [Header("Sprite")] [SerializeField]
+        private bool _flipSpriteWhenMovingLeft = true;
 
-        [Header("Animation Sprites")] public Sprite[] idleSprites;
-        public Sprite[] walkingSprites;
+        [FormerlySerializedAs("idleSprites")] [Header("Animation Sprites")] [SerializeField]
+        private Sprite[] _idleSprites;
 
-        public float animationSpeed = 0.15f;
+        [FormerlySerializedAs("walkingSprites")] [SerializeField]
+        private Sprite[] _walkingSprites;
 
-        private Rigidbody rb;
-        private SpriteRenderer spriteRenderer;
+        [SerializeField] private float _animationSpeed = 0.15f;
 
-        private Vector3 movement;
-
-        private Sprite[] currentAnimation;
-        private int animationFrame;
-        private float animationTimer;
+        private int _animationFrame;
+        private float _animationTimer;
+        private Sprite[] _currentAnimation;
+        private Vector3 _movement;
+        private Rigidbody _rb;
+        private SpriteRenderer _spriteRenderer;
 
         private void Awake()
         {
-            rb = GetComponent<Rigidbody>();
+            _rb = GetComponent<Rigidbody>();
 
-            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-            rb.freezeRotation = true;
+            _rb.freezeRotation = true;
 
-            currentAnimation = idleSprites;
+            _currentAnimation = _idleSprites;
         }
 
         private void Update()
         {
-            float x = Input.GetAxisRaw("Horizontal");
-            float z = Input.GetAxisRaw("Vertical");
+            var x = Input.GetAxisRaw("Horizontal");
+            var z = Input.GetAxisRaw("Vertical");
 
-            movement = new Vector3(x, 0f, z).normalized;
+            _movement = new Vector3(x, 0f, z).normalized;
 
             UpdateSpriteFlip();
             UpdateAnimation();
@@ -47,56 +51,51 @@ namespace Project.Scripts.Matas
 
         private void FixedUpdate()
         {
-            Vector3 newPosition = rb.position + movement * moveSpeed * Time.fixedDeltaTime;
+            var newPosition = _rb.position + _movement * _moveSpeed * Time.fixedDeltaTime;
 
-            newPosition.y = rb.position.y;
+            newPosition.y = _rb.position.y;
 
-            rb.MovePosition(newPosition);
+            _rb.MovePosition(newPosition);
         }
 
         private void UpdateSpriteFlip()
         {
-            if (!flipSpriteWhenMovingLeft)
+            if (!_flipSpriteWhenMovingLeft)
                 return;
 
-            if (movement.x > 0)
-            {
-                spriteRenderer.flipX = false;
-            }
-            else if (movement.x < 0)
-            {
-                spriteRenderer.flipX = true;
-            }
+            if (_movement.x > 0)
+                _spriteRenderer.flipX = false;
+            else if (_movement.x < 0) _spriteRenderer.flipX = true;
         }
 
         private void UpdateAnimation()
         {
-            Sprite[] newAnimation = movement.magnitude > 0
-                ? walkingSprites
-                : idleSprites;
+            var newAnimation = _movement.magnitude > 0
+                ? _walkingSprites
+                : _idleSprites;
 
-            if (currentAnimation != newAnimation)
+            if (_currentAnimation != newAnimation)
             {
-                currentAnimation = newAnimation;
-                animationFrame = 0;
-                animationTimer = 0f;
+                _currentAnimation = newAnimation;
+                _animationFrame = 0;
+                _animationTimer = 0f;
             }
 
-            if (currentAnimation.Length == 0)
+            if (_currentAnimation.Length == 0)
                 return;
 
-            animationTimer += Time.deltaTime;
+            _animationTimer += Time.deltaTime;
 
-            if (animationTimer >= animationSpeed)
+            if (_animationTimer >= _animationSpeed)
             {
-                animationTimer = 0f;
+                _animationTimer = 0f;
 
-                animationFrame++;
+                _animationFrame++;
 
-                if (animationFrame >= currentAnimation.Length)
-                    animationFrame = 0;
+                if (_animationFrame >= _currentAnimation.Length)
+                    _animationFrame = 0;
 
-                spriteRenderer.sprite = currentAnimation[animationFrame];
+                _spriteRenderer.sprite = _currentAnimation[_animationFrame];
             }
         }
     }

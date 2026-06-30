@@ -5814,7 +5814,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1299294174
 Transform:
   m_ObjectHideFlags: 0
@@ -5855,18 +5855,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 677da03a12c7aba42aae54a860a68272, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterController
-  moveSpeed: 5
-  flipSpriteWhenMovingLeft: 1
-  idleSprites:
+  _moveSpeed: 5
+  _flipSpriteWhenMovingLeft: 1
+  _idleSprites:
   - {fileID: -497709454, guid: 4fece5ade5f077c4cacc300a0e823036, type: 3}
   - {fileID: 1920986223, guid: 4fece5ade5f077c4cacc300a0e823036, type: 3}
   - {fileID: -790325012, guid: 4fece5ade5f077c4cacc300a0e823036, type: 3}
   - {fileID: 133905477, guid: 4fece5ade5f077c4cacc300a0e823036, type: 3}
-  walkingSprites:
+  _walkingSprites:
   - {fileID: 895570798, guid: 4fece5ade5f077c4cacc300a0e823036, type: 3}
   - {fileID: -717515699, guid: 4fece5ade5f077c4cacc300a0e823036, type: 3}
   - {fileID: -633289871, guid: 4fece5ade5f077c4cacc300a0e823036, type: 3}
-  animationSpeed: 0.15
+  _animationSpeed: 0.15
 --- !u!54 &1299294177
 Rigidbody:
   m_ObjectHideFlags: 0
