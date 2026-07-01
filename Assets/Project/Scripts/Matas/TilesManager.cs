@@ -88,9 +88,12 @@ namespace Project.Scripts.Matas
                 if (!_mapOverlay.activeSelf) _selectionOverlay.gameObject.SetActive(false);
             }
 
-            if (Input.GetKeyDown(KeyCode.Q)) RotateSelectedTile(false);
+            if (_mapOverlay.activeSelf)
+            {
+                if (Input.GetKeyDown(KeyCode.Q)) RotateSelectedTile(false);
 
-            if (Input.GetKeyDown(KeyCode.E)) RotateSelectedTile(true);
+                if (Input.GetKeyDown(KeyCode.E)) RotateSelectedTile(true);
+            }
         }
 
         private void OnValidate()
@@ -257,7 +260,7 @@ namespace Project.Scripts.Matas
             }
         }
 
-        public void SetTileLocked(int index, bool locked)
+        private void SetTileLocked(int index, bool locked)
         {
             if (index < 0 || index >= _tileStates.Length)
                 return;
