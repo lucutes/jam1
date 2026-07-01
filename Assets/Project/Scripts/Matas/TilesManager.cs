@@ -100,7 +100,7 @@ namespace Project.Scripts.Matas
                 // Closing only if puzzle is valid
                 if (!UpdateBoardHighlights())
                 {
-                    Debug.Log("Cannot close map: there are invalid tile connections.");
+                    ShakeInvalidTiles();
                     return;
                 }
 
@@ -143,6 +143,62 @@ namespace Project.Scripts.Matas
 
             if (_tileStates == null || _tileStates.Length != count)
                 Array.Resize(ref _tileStates, count);
+        }
+
+        private IEnumerator ShakeTile(int index)
+        {
+            var rect = _tilePrefabsUI[index].GetComponent<RectTransform>();
+
+            if (rect == null)
+                yield break;
+
+            var original = rect.anchoredPosition;
+
+            const float duration = 0.25f;
+            const float strength = 6f;
+            const float frequency = 35f;
+
+            var time = 0f;
+
+            while (time < duration)
+            {
+                time += Time.deltaTime;
+
+                var x = Mathf.Sin(time * frequency * Mathf.PI) * strength;
+
+                rect.anchoredPosition = original + Vector2.right * x;
+
+                yield return null;
+            }
+
+            rect.anchoredPosition = original;
+        }
+
+        private void ShakeInvalidTiles()
+        {
+            if (_tileStates == null)
+                return;
+
+            var invalid = new bool[_tileStates.Length];
+
+            for (var i = 0; i < _tileStates.Length; i++)
+                foreach (TileSide side in Enum.GetValues(typeof(TileSide)))
+                {
+                    var neighbour = GetNeighborIndex(i, side);
+
+                    if (neighbour < 0)
+                        continue;
+
+                    if (!CanConnect(i, side, neighbour))
+                    {
+                        invalid[i] = true;
+                        invalid[neighbour] = true;
+                    }
+                }
+
+            for (var i = 0; i < invalid.Length; i++)
+                if (invalid[i])
+                    StartCoroutine(ShakeTile(i));
         }
 
         private bool HasBoardMismatch()
