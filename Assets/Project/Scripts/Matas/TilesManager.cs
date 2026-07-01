@@ -40,6 +40,14 @@ namespace Project.Scripts.Matas
         [Header("UI Background")] [SerializeField]
         private GameObject _uiBackground;
 
+        [Header("UI States")] [SerializeField] private TileState[] _tileStates;
+
+        [SerializeField] private bool _debugShowInvalidTiles;
+        [SerializeField] private bool _debugConnections;
+
+        [SerializeField] private Color _normalTileColor = Color.white;
+        [SerializeField] private Color _invalidNeighbourColor = new(1f, 0.45f, 0.45f);
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
@@ -48,7 +56,6 @@ namespace Project.Scripts.Matas
         private int _selectedIndex = -1;
         private GameObject[] _tilePrefabs;
         private GameObject[] _tilePrefabsUI;
-        private TileState[] _tileStates;
 
 
         private void Start()
@@ -58,12 +65,14 @@ namespace Project.Scripts.Matas
 
             _gridSize = Mathf.CeilToInt(Mathf.Sqrt(_tilePrefabsUI.Length));
             _lockOverlays = new GameObject[_tilePrefabsUI.Length];
-            _tileStates = new TileState[_tilePrefabsUI.Length];
+            //_tileStates = new TileState[_tilePrefabsUI.Length];
 
             SetupUITiles();
             SetupWorldTiles();
 
             InitializeLockedTiles();
+
+            UpdateBoardHighlights();
 
             if (_selectionOverlay != null)
             {
@@ -76,16 +85,31 @@ namespace Project.Scripts.Matas
         {
             if (Input.GetKeyDown(KeyCode.Tab))
             {
-                _mapOverlay.SetActive(
-                    !_mapOverlay.activeSelf);
-                _inventoryOverlay.SetActive(
-                    !_inventoryOverlay.activeSelf);
-                _uiBackground.SetActive(
-                    !_uiBackground.activeSelf);
+                // Opening is always allowed
+                if (!_mapOverlay.activeSelf)
+                {
+                    _mapOverlay.SetActive(true);
+                    _inventoryOverlay.SetActive(true);
+                    _uiBackground.SetActive(true);
+                    _characterController.CanMove = false;
 
-                _characterController.CanMove = !_mapOverlay.activeSelf;
+                    UpdateBoardHighlights();
+                    return;
+                }
 
-                if (!_mapOverlay.activeSelf) _selectionOverlay.gameObject.SetActive(false);
+                // Closing only if puzzle is valid
+                if (!UpdateBoardHighlights())
+                {
+                    Debug.Log("Cannot close map: there are invalid tile connections.");
+                    return;
+                }
+
+                _mapOverlay.SetActive(false);
+                _inventoryOverlay.SetActive(false);
+                _uiBackground.SetActive(false);
+
+                _characterController.CanMove = true;
+                _selectionOverlay.gameObject.SetActive(false);
             }
 
             if (_mapOverlay.activeSelf)
@@ -94,15 +118,195 @@ namespace Project.Scripts.Matas
 
                 if (Input.GetKeyDown(KeyCode.E)) RotateSelectedTile(true);
             }
+
+            if (_debugShowInvalidTiles)
+                for (var i = 0; i < _tileStates.Length; i++)
+                {
+                    var valid = IsTileValid(i);
+
+                    var img = _tilePrefabsUI[i].GetComponent<Image>();
+                    if (img != null)
+                        img.color = valid ? Color.white : Color.red;
+                }
+
+            if (_debugConnections) RefreshAllDebugVisuals();
         }
 
         private void OnValidate()
         {
-            var count = _mapOverlay.transform.childCount;
+            var count = _mapOverlay == null
+                ? 0
+                : _mapOverlay.transform.childCount;
 
-            if (_lockedTiles == null ||
-                _lockedTiles.Length != count)
+            if (_lockedTiles == null || _lockedTiles.Length != count)
                 Array.Resize(ref _lockedTiles, count);
+
+            if (_tileStates == null || _tileStates.Length != count)
+                Array.Resize(ref _tileStates, count);
+        }
+
+        private bool HasBoardMismatch()
+        {
+            if (_tileStates == null)
+                return false;
+
+            for (var i = 0; i < _tileStates.Length; i++)
+                foreach (TileSide side in Enum.GetValues(typeof(TileSide)))
+                {
+                    var neighbour = GetNeighborIndex(i, side);
+
+                    if (neighbour < 0)
+                        continue;
+
+                    if (!CanConnect(i, side, neighbour))
+                        return true;
+                }
+
+            return false;
+        }
+
+        private void ResetTileHighlights()
+        {
+            foreach (var tile in _tilePrefabsUI)
+            {
+                var image = tile.GetComponent<Image>();
+
+                if (image != null)
+                    image.color = _normalTileColor;
+            }
+        }
+
+        private bool UpdateBoardHighlights()
+        {
+            ResetTileHighlights();
+
+            if (_tileStates == null)
+                return true;
+
+            var invalid = new bool[_tileStates.Length];
+            var hasMismatch = false;
+
+            for (var i = 0; i < _tileStates.Length; i++)
+                foreach (TileSide side in Enum.GetValues(typeof(TileSide)))
+                {
+                    var neighbour = GetNeighborIndex(i, side);
+
+                    if (neighbour < 0)
+                        continue;
+
+                    if (!CanConnect(i, side, neighbour))
+                    {
+                        hasMismatch = true;
+                        invalid[i] = true;
+                        invalid[neighbour] = true;
+                    }
+                }
+
+            for (var i = 0; i < invalid.Length; i++)
+            {
+                if (!invalid[i])
+                    continue;
+
+                var image = _tilePrefabsUI[i].GetComponent<Image>();
+
+                if (image != null)
+                    image.color = _invalidNeighbourColor;
+            }
+
+            return !hasMismatch;
+        }
+
+        private void UpdateTileDebugVisual(int index)
+        {
+            if (_tilePrefabsUI == null || index < 0 || index >= _tilePrefabsUI.Length)
+                return;
+
+            var img = _tilePrefabsUI[index].GetComponent<Image>();
+            if (img == null)
+                return;
+
+            var valid = IsTileValid(index);
+
+            if (valid)
+            {
+                img.color = Color.white;
+                return;
+            }
+
+            var hasMismatch = false;
+
+            for (var i = 0; i < 4; i++)
+            {
+                var side = (TileSide)i;
+                var neighbor = GetNeighborIndex(index, side);
+
+                if (neighbor == -1)
+                    continue;
+
+                if (!CanConnect(index, side, neighbor))
+                {
+                    hasMismatch = true;
+                    break;
+                }
+            }
+
+            img.color = hasMismatch ? new Color(1f, 0.4f, 0.4f) : new Color(1f, 1f, 0.6f);
+        }
+
+        private void RefreshAllDebugVisuals()
+        {
+            if (_tilePrefabsUI == null)
+                return;
+
+            for (var i = 0; i < _tilePrefabsUI.Length; i++)
+                UpdateTileDebugVisual(i);
+        }
+
+        private bool CanConnect(int aIndex, TileSide aSide, int bIndex)
+        {
+            if (bIndex < 0 || bIndex >= _tileStates.Length)
+                return false;
+
+            var bSide = TileState.Opposite(aSide);
+
+            return _tileStates[aIndex]
+                .CanConnect(aSide, _tileStates[bIndex], bSide);
+        }
+
+        private int GetNeighborIndex(int index, TileSide side)
+        {
+            var x = index % _gridSize;
+            var y = index / _gridSize;
+
+            switch (side)
+            {
+                case TileSide.Top: y--; break;
+                case TileSide.Bottom: y++; break;
+                case TileSide.Left: x--; break;
+                case TileSide.Right: x++; break;
+            }
+
+            if (x < 0 || x >= _gridSize || y < 0 || y >= _gridSize)
+                return -1;
+
+            return y * _gridSize + x;
+        }
+
+        private bool IsTileValid(int index)
+        {
+            for (var i = 0; i < 4; i++)
+            {
+                var side = (TileSide)i;
+                var neighbor = GetNeighborIndex(index, side);
+
+                if (neighbor == -1)
+                    continue;
+
+                if (!CanConnect(index, side, neighbor))
+                    return false;
+            }
+
+            return true;
         }
 
         private void InitializeLockedTiles()
@@ -158,6 +362,10 @@ namespace Project.Scripts.Matas
             }
 
             rect.localRotation = targetRot;
+
+            UpdateTileVisual(index);
+            UpdateTileDebugVisual(index);
+            UpdateBoardHighlights();
         }
 
         private IEnumerator RotateWorldTile(int index)
@@ -185,6 +393,21 @@ namespace Project.Scripts.Matas
             }
 
             tile.rotation = targetRot;
+
+            UpdateTileVisual(index);
+            UpdateTileDebugVisual(index);
+        }
+
+        private void UpdateTileVisual(int index)
+        {
+            if (_tilePrefabsUI == null || index < 0 || index >= _tilePrefabsUI.Length)
+                return;
+
+            var vis = _tilePrefabsUI[index]
+                .GetComponent<TileConnectionVisualizer>();
+
+            if (vis != null)
+                vis.Set(_tileStates[index]);
         }
 
         private void GetWorldTiles()
@@ -257,6 +480,8 @@ namespace Project.Scripts.Matas
                     if (_lockOverlays != null &&
                         _lockOverlays[i] != null)
                         _lockOverlays[i].SetActive(true);
+
+                UpdateTileVisual(i);
             }
         }
 
@@ -290,12 +515,12 @@ namespace Project.Scripts.Matas
                 GetUITilePosition(index);
 
             _selectionOverlay.localRotation =
-                Quaternion.Euler(
-                    0f,
-                    0f,
-                    -_tileStates[index].Rotation);
+                Quaternion.Euler(0f, 0f, -_tileStates[index].Rotation);
 
             _selectionOverlay.SetAsLastSibling();
+
+            UpdateTileDebugVisual(index);
+            UpdateBoardHighlights();
         }
 
         private void GetUITiles()
@@ -558,6 +783,12 @@ namespace Project.Scripts.Matas
             RefreshTileIndices();
 
             _dragIndex = -1;
+
+            UpdateTileVisual(_dragIndex);
+            UpdateTileVisual(targetIndex);
+
+            RefreshAllDebugVisuals();
+            UpdateBoardHighlights();
         }
 
         private void RefreshHierarchies()
@@ -605,9 +836,111 @@ namespace Project.Scripts.Matas
         }
     }
 
+    public enum TileConnectionType
+    {
+        Grass,
+        Dirt,
+        Path,
+        River,
+        Water
+    }
+
+    public enum TileSide
+    {
+        Top,
+        Right,
+        Bottom,
+        Left
+    }
+
+    [Serializable]
     public struct TileState
     {
-        public float Rotation { get; set; }
-        public bool IsLocked { get; set; }
+        [Range(0f, 270f)] public float Rotation;
+
+        public bool IsLocked;
+
+        public TileConnectionType Top;
+        public TileConnectionType Right;
+        public TileConnectionType Bottom;
+        public TileConnectionType Left;
+
+        public TileConnectionType GetSide(TileSide side)
+        {
+            return side switch
+            {
+                TileSide.Top => Top,
+                TileSide.Right => Right,
+                TileSide.Bottom => Bottom,
+                TileSide.Left => Left,
+                _ => Top
+            };
+        }
+
+        public void SetSide(TileSide side, TileConnectionType type)
+        {
+            switch (side)
+            {
+                case TileSide.Top:
+                    Top = type;
+                    break;
+
+                case TileSide.Right:
+                    Right = type;
+                    break;
+
+                case TileSide.Bottom:
+                    Bottom = type;
+                    break;
+
+                case TileSide.Left:
+                    Left = type;
+                    break;
+            }
+        }
+
+        /// <summary>
+        ///     Returns the connection type currently facing the specified world side,
+        ///     taking the tile's rotation into account.
+        /// </summary>
+        public TileConnectionType GetRotatedSide(TileSide worldSide)
+        {
+            var rotationSteps = Mathf.RoundToInt(Rotation / 90f) % 4;
+
+            var localSide = worldSide;
+
+            for (var i = 0; i < rotationSteps; i++) localSide = RotateSideCounterClockwise(localSide);
+
+            return GetSide(localSide);
+        }
+
+        private static TileSide RotateSideCounterClockwise(TileSide side)
+        {
+            return side switch
+            {
+                TileSide.Top => TileSide.Right,
+                TileSide.Right => TileSide.Bottom,
+                TileSide.Bottom => TileSide.Left,
+                TileSide.Left => TileSide.Top,
+                _ => side
+            };
+        }
+
+        public static TileSide Opposite(TileSide side)
+        {
+            return side switch
+            {
+                TileSide.Top => TileSide.Bottom,
+                TileSide.Right => TileSide.Left,
+                TileSide.Bottom => TileSide.Top,
+                TileSide.Left => TileSide.Right,
+                _ => side
+            };
+        }
+
+        public bool CanConnect(TileSide mySide, TileState other, TileSide otherSide)
+        {
+            return GetRotatedSide(mySide) == other.GetRotatedSide(otherSide);
+        }
     }
 }
