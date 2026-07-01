@@ -37,6 +37,9 @@ namespace Project.Scripts.Matas
         [Header("Character Controller")] [SerializeField]
         private CharacterController2D _characterController;
 
+        [Header("UI Background")] [SerializeField]
+        private GameObject _uiBackground;
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
@@ -77,6 +80,8 @@ namespace Project.Scripts.Matas
                     !_mapOverlay.activeSelf);
                 _inventoryOverlay.SetActive(
                     !_inventoryOverlay.activeSelf);
+                _uiBackground.SetActive(
+                    !_uiBackground.activeSelf);
 
                 _characterController.CanMove = !_mapOverlay.activeSelf;
 
