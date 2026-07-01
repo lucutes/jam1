@@ -145,6 +145,15 @@ namespace Project.Scripts.Matas
                 Array.Resize(ref _tileStates, count);
         }
 
+        private bool IsTileEmpty(int index)
+        {
+            if (index < 0 || index >= _tilePrefabsUI.Length)
+                return true;
+
+            var img = _tilePrefabsUI[index].GetComponent<Image>();
+            return img == null || img.sprite == null;
+        }
+
         private IEnumerator ShakeTile(int index)
         {
             var rect = _tilePrefabsUI[index].GetComponent<RectTransform>();
@@ -323,6 +332,10 @@ namespace Project.Scripts.Matas
             if (bIndex < 0 || bIndex >= _tileStates.Length)
                 return false;
 
+            // Empty tiles are ignored completely.
+            if (IsTileEmpty(aIndex) || IsTileEmpty(bIndex))
+                return true;
+
             var bSide = TileState.Opposite(aSide);
 
             return _tileStates[aIndex]
@@ -350,6 +363,9 @@ namespace Project.Scripts.Matas
 
         private bool IsTileValid(int index)
         {
+            if (IsTileEmpty(index))
+                return true;
+
             for (var i = 0; i < 4; i++)
             {
                 var side = (TileSide)i;
@@ -810,6 +826,12 @@ namespace Project.Scripts.Matas
                 return;
             }
 
+            if (IsTileEmpty(_dragIndex) && IsTileEmpty(targetIndex))
+            {
+                _dragIndex = -1;
+                return;
+            }
+
             (_tilePrefabsUI[_dragIndex],
                     _tilePrefabsUI[targetIndex]) =
                 (_tilePrefabsUI[targetIndex],
@@ -838,13 +860,13 @@ namespace Project.Scripts.Matas
 
             RefreshTileIndices();
 
-            _dragIndex = -1;
-
             UpdateTileVisual(_dragIndex);
             UpdateTileVisual(targetIndex);
 
             RefreshAllDebugVisuals();
             UpdateBoardHighlights();
+
+            _dragIndex = -1;
         }
 
         private void RefreshHierarchies()
