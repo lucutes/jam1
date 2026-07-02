@@ -983,11 +983,44 @@ namespace Project.Scripts.Matas
         /// </summary>
         public TileConnectionType GetRotatedSide(TileSide worldSide)
         {
-            var rotationSteps = Mathf.RoundToInt(Rotation / 90f) % 4;
+            var rot = Mathf.RoundToInt(Rotation / 90f) % 4;
 
-            var localSide = worldSide;
+            var localSide = rot switch
+            {
+                0 => worldSide,
 
-            for (var i = 0; i < rotationSteps; i++) localSide = RotateSideCounterClockwise(localSide);
+                // Tile rotated 90° clockwise
+                1 => worldSide switch
+                {
+                    TileSide.Top => TileSide.Left,
+                    TileSide.Right => TileSide.Top,
+                    TileSide.Bottom => TileSide.Right,
+                    TileSide.Left => TileSide.Bottom,
+                    _ => worldSide
+                },
+
+                // 180°
+                2 => worldSide switch
+                {
+                    TileSide.Top => TileSide.Bottom,
+                    TileSide.Right => TileSide.Left,
+                    TileSide.Bottom => TileSide.Top,
+                    TileSide.Left => TileSide.Right,
+                    _ => worldSide
+                },
+
+                // 270° clockwise
+                3 => worldSide switch
+                {
+                    TileSide.Top => TileSide.Right,
+                    TileSide.Right => TileSide.Bottom,
+                    TileSide.Bottom => TileSide.Left,
+                    TileSide.Left => TileSide.Top,
+                    _ => worldSide
+                },
+
+                _ => worldSide
+            };
 
             return GetSide(localSide);
         }
