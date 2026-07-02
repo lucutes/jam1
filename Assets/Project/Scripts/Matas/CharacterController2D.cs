@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Project.Scripts.Matas
+namespace Project.Scripts.Matas 
 {
     [RequireComponent(typeof(Rigidbody))]
     public class CharacterController2D : MonoBehaviour
@@ -45,7 +45,6 @@ namespace Project.Scripts.Matas
             if (_currentAnimation.Length > 0)
                 _spriteRenderer.sprite = _currentAnimation[0];
         }
-
         private void Update()
         {
             if (CanMove)
