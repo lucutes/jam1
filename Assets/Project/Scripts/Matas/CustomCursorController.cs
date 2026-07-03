@@ -37,6 +37,16 @@ namespace Project.Scripts.Matas
             AnimateCursor();
         }
 
+        private void OnEnable()
+        {
+            Cursor.lockState = CursorLockMode.None;
+        }
+
+        private void OnDisable()
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+
         private void UpdateCursorPosition()
         {
             _cursorImage.transform.position = Input.mousePosition;

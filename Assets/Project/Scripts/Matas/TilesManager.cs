@@ -48,6 +48,8 @@ namespace Project.Scripts.Matas
         [SerializeField] private Color _normalTileColor = Color.white;
         [SerializeField] private Color _invalidNeighbourColor = new(1f, 0.45f, 0.45f);
 
+        [Header("Cursor")] [SerializeField] private GameObject _customCursor;
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
@@ -60,6 +62,8 @@ namespace Project.Scripts.Matas
 
         private void Start()
         {
+            Cursor.visible = false;
+
             GetUITiles();
             GetWorldTiles();
 
@@ -88,6 +92,8 @@ namespace Project.Scripts.Matas
                 // Opening is always allowed
                 if (!_mapOverlay.activeSelf)
                 {
+                    _customCursor.SetActive(true);
+
                     _mapOverlay.SetActive(true);
                     _inventoryOverlay.SetActive(true);
                     _uiBackground.SetActive(true);
@@ -104,6 +110,7 @@ namespace Project.Scripts.Matas
                     return;
                 }
 
+                _customCursor.SetActive(false);
                 _mapOverlay.SetActive(false);
                 _inventoryOverlay.SetActive(false);
                 _uiBackground.SetActive(false);
