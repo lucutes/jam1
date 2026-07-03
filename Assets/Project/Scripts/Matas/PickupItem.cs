@@ -14,7 +14,7 @@ namespace Project.Scripts.Matas
             Pickup();
         }
 
-        public void Pickup()
+        private void Pickup()
         {
             InventoryManager.Instance.Collect(_item);
             gameObject.SetActive(false);

@@ -62,8 +62,6 @@ namespace Project.Scripts.Matas
 
         private void Start()
         {
-            Cursor.visible = false;
-
             GetUITiles();
             GetWorldTiles();
 
