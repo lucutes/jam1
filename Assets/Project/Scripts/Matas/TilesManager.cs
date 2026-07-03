@@ -85,15 +85,13 @@ namespace Project.Scripts.Matas
         {
             if (Input.GetKeyDown(KeyCode.Tab))
             {
-                _characterController.CanMove = _mapOverlay.activeSelf;
-
                 // Opening is always allowed
                 if (!_mapOverlay.activeSelf)
                 {
                     _mapOverlay.SetActive(true);
                     _inventoryOverlay.SetActive(true);
                     _uiBackground.SetActive(true);
-                    //_characterController.CanMove = false;
+                    _characterController.CanMove = false;
 
                     UpdateBoardHighlights();
                     return;
@@ -110,7 +108,7 @@ namespace Project.Scripts.Matas
                 _inventoryOverlay.SetActive(false);
                 _uiBackground.SetActive(false);
 
-                //_characterController.CanMove = true;
+                _characterController.CanMove = true;
                 _selectionOverlay.gameObject.SetActive(false);
             }
 
