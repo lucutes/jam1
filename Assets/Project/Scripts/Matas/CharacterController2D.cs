@@ -36,7 +36,6 @@ namespace Project.Scripts.Matas
             _rb = GetComponent<Rigidbody>();
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-            _rb.isKinematic = true;
             _rb.interpolation = RigidbodyInterpolation.Interpolate;
             _rb.freezeRotation = true;
 
