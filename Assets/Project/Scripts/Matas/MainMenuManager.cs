@@ -5,10 +5,11 @@ namespace Project.Scripts.Matas
 {
     public class MainMenuManager : MonoBehaviour
     {
-        [SerializeField] private GameObject _menuObject;
         [SerializeField] private GameObject _mainCharacter;
         [SerializeField] private GameObject _tilesManager;
         [SerializeField] private GameObject _cursor;
+        [SerializeField] private GameObject _menuUIOverlay;
+        [SerializeField] private GameObject _creditsUIOverlay;
 
         [SerializeField] private AnimationCurve _moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         [SerializeField] private float _distance = 5f;
@@ -20,19 +21,29 @@ namespace Project.Scripts.Matas
         private void Start()
         {
             _mainCamera = Camera.main.gameObject;
-            _startPos = _menuObject.transform.position;
+            _startPos = _menuUIOverlay.transform.position;
         }
 
-        private void Update()
+        public void NewGame()
         {
-            if (Input.GetKeyDown(KeyCode.Return))
-            {
-                _mainCharacter.GetComponent<CharacterController2D>().enabled = true;
-                _tilesManager.SetActive(true);
-                _cursor.SetActive(false);
-                SetupCamera();
-                MoveMenuLeft();
-            }
+            _mainCharacter.GetComponent<CharacterController2D>().enabled = true;
+            _tilesManager.SetActive(true);
+            _cursor.SetActive(false);
+            SetupCamera();
+            MoveMenuLeft();
+        }
+
+        public void ShowCredits()
+        {
+            _creditsUIOverlay.SetActive(!_creditsUIOverlay.activeSelf);
+        }
+
+        public void Quit()
+        {
+#if UNITY_WEBGL
+            return;
+#endif
+            Application.Quit();
         }
 
         private void SetupCamera()
@@ -65,13 +76,13 @@ namespace Project.Scripts.Matas
                 var t = Mathf.Clamp01(time / _duration);
 
                 var curveValue = _moveCurve.Evaluate(t);
-                _menuObject.transform.position = Vector3.LerpUnclamped(_startPos, targetPos, curveValue);
+                _menuUIOverlay.transform.position = Vector2.LerpUnclamped(_startPos, targetPos, curveValue);
 
                 yield return null;
             }
 
-            _menuObject.SetActive(false);
-            _menuObject.transform.position = targetPos;
+            _menuUIOverlay.SetActive(false);
+            _menuUIOverlay.transform.position = targetPos;
         }
     }
 }
