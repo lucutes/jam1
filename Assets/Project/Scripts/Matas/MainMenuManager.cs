@@ -37,9 +37,15 @@ namespace Project.Scripts.Matas
 
         private void SetupCamera()
         {
-            _mainCamera.GetComponent<Camera>().orthographic = true;
+            //_mainCamera.GetComponent<Camera>().orthographic = true;
+            Invoke(nameof(EnableOrthographicCamera), 1f);
             _mainCamera.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
             _mainCamera.GetComponent<CameraFollowPlayer>().enabled = true;
+        }
+
+        private void EnableOrthographicCamera()
+        {
+            _mainCamera.GetComponent<Camera>().orthographic = true;
         }
 
         private void MoveMenuLeft()
