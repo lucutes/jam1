@@ -53,11 +53,13 @@ namespace Project.Scripts.Matas
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
-        private int _gridSize;
         private GameObject[] _lockOverlays;
         private int _selectedIndex = -1;
         private GameObject[] _tilePrefabs;
         private GameObject[] _tilePrefabsUI;
+        public int WorldTileCount => _tilePrefabs != null ? _tilePrefabs.Length : 0;
+        public int GridSize { get; private set; }
+        public bool IsReady => _tilePrefabs != null && _tileStates != null && GridSize > 0;
 
 
         private void Start()
@@ -65,7 +67,7 @@ namespace Project.Scripts.Matas
             GetUITiles();
             GetWorldTiles();
 
-            _gridSize = Mathf.CeilToInt(Mathf.Sqrt(_tilePrefabsUI.Length));
+            GridSize = Mathf.CeilToInt(Mathf.Sqrt(_tilePrefabsUI.Length));
             _lockOverlays = new GameObject[_tilePrefabsUI.Length];
             //_tileStates = new TileState[_tilePrefabsUI.Length];
 
@@ -148,6 +150,36 @@ namespace Project.Scripts.Matas
 
             if (_tileStates == null || _tileStates.Length != count)
                 Array.Resize(ref _tileStates, count);
+        }
+
+        public bool TryGetWorldTilePosition(int index, out Vector3 position)
+        {
+            position = Vector3.zero;
+
+            if (_tilePrefabs == null || index < 0 || index >= _tilePrefabs.Length)
+                return false;
+
+            position = _tilePrefabs[index].transform.position;
+            return true;
+        }
+
+        public bool TryGetNeighborIndex(int index, TileSide side, out int neighbor)
+        {
+            neighbor = -1;
+
+            if (index < 0 || index >= WorldTileCount)
+                return false;
+
+            neighbor = GetNeighborIndex(index, side);
+            return neighbor >= 0 && neighbor < WorldTileCount;
+        }
+
+        public bool CanMoveBetween(int index, TileSide side, out int neighbor)
+        {
+            if (!TryGetNeighborIndex(index, side, out neighbor))
+                return false;
+
+            return CanConnect(index, side, neighbor);
         }
 
         private bool IsTileEmpty(int index)
@@ -349,8 +381,8 @@ namespace Project.Scripts.Matas
 
         private int GetNeighborIndex(int index, TileSide side)
         {
-            var x = index % _gridSize;
-            var y = index / _gridSize;
+            var x = index % GridSize;
+            var y = index / GridSize;
 
             switch (side)
             {
@@ -360,10 +392,10 @@ namespace Project.Scripts.Matas
                 case TileSide.Right: x++; break;
             }
 
-            if (x < 0 || x >= _gridSize || y < 0 || y >= _gridSize)
+            if (x < 0 || x >= GridSize || y < 0 || y >= GridSize)
                 return -1;
 
-            return y * _gridSize + x;
+            return y * GridSize + x;
         }
 
         private bool IsTileValid(int index)
@@ -613,16 +645,16 @@ namespace Project.Scripts.Matas
 
         private Vector2 GetUITilePosition(int index)
         {
-            var x = index % _gridSize;
-            var y = index / _gridSize;
+            var x = index % GridSize;
+            var y = index / GridSize;
 
             var totalWidth =
-                _gridSize * _tileSizeUI +
-                (_gridSize - 1) * _horizontalGapUI;
+                GridSize * _tileSizeUI +
+                (GridSize - 1) * _horizontalGapUI;
 
             var totalHeight =
-                _gridSize * _tileSizeUI +
-                (_gridSize - 1) * _verticalGapUI;
+                GridSize * _tileSizeUI +
+                (GridSize - 1) * _verticalGapUI;
 
             var startX =
                 -totalWidth * 0.5f +
@@ -640,16 +672,16 @@ namespace Project.Scripts.Matas
 
         private Vector3 GetWorldTilePosition(int index)
         {
-            var x = index % _gridSize;
-            var y = index / _gridSize;
+            var x = index % GridSize;
+            var y = index / GridSize;
 
             var totalWidth =
-                _gridSize * _tileSizeWorld +
-                (_gridSize - 1) * _horizontalGapWorld;
+                GridSize * _tileSizeWorld +
+                (GridSize - 1) * _horizontalGapWorld;
 
             var totalHeight =
-                _gridSize * _tileSizeWorld +
-                (_gridSize - 1) * _verticalGapWorld;
+                GridSize * _tileSizeWorld +
+                (GridSize - 1) * _verticalGapWorld;
 
             var startX =
                 -totalWidth * 0.5f +

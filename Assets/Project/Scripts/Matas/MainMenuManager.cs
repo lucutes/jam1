@@ -10,6 +10,7 @@ namespace Project.Scripts.Matas
         [SerializeField] private GameObject _cursor;
         [SerializeField] private GameObject _menuUIOverlay;
         [SerializeField] private GameObject _creditsUIOverlay;
+        [SerializeField] private GameObject _enemy;
 
         [SerializeField] private AnimationCurve _moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         [SerializeField] private float _distance = 5f;
@@ -31,6 +32,7 @@ namespace Project.Scripts.Matas
             _mainCharacter.GetComponent<CharacterController2D>().enabled = true;
             _tilesManager.SetActive(true);
             _cursor.SetActive(false);
+            if (_enemy != null) _enemy.SetActive(true);
             SetupCamera();
             MoveMenuLeft();
         }
