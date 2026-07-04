@@ -50,6 +50,8 @@ namespace Project.Scripts.Matas
 
         [Header("Cursor")] [SerializeField] private GameObject _customCursor;
 
+        [Header("Enemy")] [SerializeField] private GameObject _enemy;
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
@@ -93,6 +95,7 @@ namespace Project.Scripts.Matas
                 if (!_mapOverlay.activeSelf)
                 {
                     _customCursor.SetActive(true);
+                    _enemy.SetActive(false);
 
                     _mapOverlay.SetActive(true);
                     _inventoryOverlay.SetActive(true);
@@ -115,6 +118,7 @@ namespace Project.Scripts.Matas
                 _inventoryOverlay.SetActive(false);
                 _uiBackground.SetActive(false);
 
+                _enemy.SetActive(true);
                 _characterController.CanMove = true;
                 _selectionOverlay.gameObject.SetActive(false);
             }
