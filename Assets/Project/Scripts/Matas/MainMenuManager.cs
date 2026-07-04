@@ -16,11 +16,13 @@ namespace Project.Scripts.Matas
         [SerializeField] private float _duration = 1f;
 
         private GameObject _mainCamera;
+        private Camera _mainCameraComponent;
         private Vector3 _startPos;
 
         private void Start()
         {
             _mainCamera = Camera.main.gameObject;
+            _mainCameraComponent = Camera.main;
             _startPos = _menuUIOverlay.transform.position;
         }
 
@@ -48,20 +50,32 @@ namespace Project.Scripts.Matas
 
         private void SetupCamera()
         {
-            //_mainCamera.GetComponent<Camera>().orthographic = true;
-            Invoke(nameof(EnableOrthographicCamera), 1f);
             _mainCamera.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
             _mainCamera.GetComponent<CameraFollowPlayer>().enabled = true;
+            StartCoroutine(ZoomOutRoutine());
         }
 
-        private void EnableOrthographicCamera()
+        private IEnumerator ZoomOutRoutine()
         {
-            _mainCamera.GetComponent<Camera>().orthographic = true;
+            var time = 0f;
+            var targetZoom = 7f;
+
+            while (time < _duration)
+            {
+                time += Time.deltaTime;
+                var t = Mathf.Clamp01(time / _duration);
+
+                var curveValue = _moveCurve.Evaluate(t);
+                _mainCameraComponent.orthographicSize = Mathf.LerpUnclamped(1f, targetZoom, curveValue);
+
+                yield return null;
+            }
+
+            _mainCameraComponent.orthographicSize = targetZoom;
         }
 
         private void MoveMenuLeft()
         {
-            StopAllCoroutines();
             StartCoroutine(MoveMenuLeftRoutine());
         }
 
