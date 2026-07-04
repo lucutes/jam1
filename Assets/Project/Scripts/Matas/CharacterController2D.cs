@@ -66,7 +66,7 @@ namespace Project.Scripts.Matas
 
         private void FixedUpdate()
         {
-            var targetPosition = _rb.position + _movement * _moveSpeed * Time.fixedDeltaTime;
+            var targetPosition = _rb.position + _moveSpeed * Time.fixedDeltaTime * _movement;
             _rb.MovePosition(targetPosition);
         }
 
