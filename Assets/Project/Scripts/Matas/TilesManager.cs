@@ -48,14 +48,20 @@ namespace Project.Scripts.Matas
         [SerializeField] private Color _normalTileColor = Color.white;
         [SerializeField] private Color _invalidNeighbourColor = new(1f, 0.45f, 0.45f);
 
+        [Header("Cursor")] [SerializeField] private GameObject _customCursor;
+
+        [Header("Enemy")] [SerializeField] private GameObject _enemy;
+
         //[Header("Rotation")] [SerializeField] private float _rotationAngle = 90f;
 
         private int _dragIndex = -1;
-        private int _gridSize;
         private GameObject[] _lockOverlays;
         private int _selectedIndex = -1;
         private GameObject[] _tilePrefabs;
         private GameObject[] _tilePrefabsUI;
+        public int WorldTileCount => _tilePrefabs != null ? _tilePrefabs.Length : 0;
+        public int GridSize { get; private set; }
+        public bool IsReady => _tilePrefabs != null && _tileStates != null && GridSize > 0;
 
         public int WorldTileCount => _tilePrefabs != null ? _tilePrefabs.Length : 0;
         public int GridSize => _gridSize;
@@ -67,7 +73,7 @@ namespace Project.Scripts.Matas
             GetUITiles();
             GetWorldTiles();
 
-            _gridSize = Mathf.CeilToInt(Mathf.Sqrt(_tilePrefabsUI.Length));
+            GridSize = Mathf.CeilToInt(Mathf.Sqrt(_tilePrefabsUI.Length));
             _lockOverlays = new GameObject[_tilePrefabsUI.Length];
             //_tileStates = new TileState[_tilePrefabsUI.Length];
 
@@ -92,6 +98,9 @@ namespace Project.Scripts.Matas
                 // Opening is always allowed
                 if (!_mapOverlay.activeSelf)
                 {
+                    _customCursor.SetActive(true);
+                    _enemy.SetActive(false);
+
                     _mapOverlay.SetActive(true);
                     _inventoryOverlay.SetActive(true);
                     _uiBackground.SetActive(true);
@@ -108,10 +117,12 @@ namespace Project.Scripts.Matas
                     return;
                 }
 
+                _customCursor.SetActive(false);
                 _mapOverlay.SetActive(false);
                 _inventoryOverlay.SetActive(false);
                 _uiBackground.SetActive(false);
 
+                _enemy.SetActive(true);
                 _characterController.CanMove = true;
                 _selectionOverlay.gameObject.SetActive(false);
             }
@@ -147,6 +158,36 @@ namespace Project.Scripts.Matas
 
             if (_tileStates == null || _tileStates.Length != count)
                 Array.Resize(ref _tileStates, count);
+        }
+
+        public bool TryGetWorldTilePosition(int index, out Vector3 position)
+        {
+            position = Vector3.zero;
+
+            if (_tilePrefabs == null || index < 0 || index >= _tilePrefabs.Length)
+                return false;
+
+            position = _tilePrefabs[index].transform.position;
+            return true;
+        }
+
+        public bool TryGetNeighborIndex(int index, TileSide side, out int neighbor)
+        {
+            neighbor = -1;
+
+            if (index < 0 || index >= WorldTileCount)
+                return false;
+
+            neighbor = GetNeighborIndex(index, side);
+            return neighbor >= 0 && neighbor < WorldTileCount;
+        }
+
+        public bool CanMoveBetween(int index, TileSide side, out int neighbor)
+        {
+            if (!TryGetNeighborIndex(index, side, out neighbor))
+                return false;
+
+            return CanConnect(index, side, neighbor);
         }
 
         private bool IsTileEmpty(int index)
@@ -378,8 +419,8 @@ namespace Project.Scripts.Matas
 
         private int GetNeighborIndex(int index, TileSide side)
         {
-            var x = index % _gridSize;
-            var y = index / _gridSize;
+            var x = index % GridSize;
+            var y = index / GridSize;
 
             switch (side)
             {
@@ -389,10 +430,10 @@ namespace Project.Scripts.Matas
                 case TileSide.Right: x++; break;
             }
 
-            if (x < 0 || x >= _gridSize || y < 0 || y >= _gridSize)
+            if (x < 0 || x >= GridSize || y < 0 || y >= GridSize)
                 return -1;
 
-            return y * _gridSize + x;
+            return y * GridSize + x;
         }
 
         private bool IsTileValid(int index)
@@ -642,16 +683,16 @@ namespace Project.Scripts.Matas
 
         private Vector2 GetUITilePosition(int index)
         {
-            var x = index % _gridSize;
-            var y = index / _gridSize;
+            var x = index % GridSize;
+            var y = index / GridSize;
 
             var totalWidth =
-                _gridSize * _tileSizeUI +
-                (_gridSize - 1) * _horizontalGapUI;
+                GridSize * _tileSizeUI +
+                (GridSize - 1) * _horizontalGapUI;
 
             var totalHeight =
-                _gridSize * _tileSizeUI +
-                (_gridSize - 1) * _verticalGapUI;
+                GridSize * _tileSizeUI +
+                (GridSize - 1) * _verticalGapUI;
 
             var startX =
                 -totalWidth * 0.5f +
@@ -669,16 +710,16 @@ namespace Project.Scripts.Matas
 
         private Vector3 GetWorldTilePosition(int index)
         {
-            var x = index % _gridSize;
-            var y = index / _gridSize;
+            var x = index % GridSize;
+            var y = index / GridSize;
 
             var totalWidth =
-                _gridSize * _tileSizeWorld +
-                (_gridSize - 1) * _horizontalGapWorld;
+                GridSize * _tileSizeWorld +
+                (GridSize - 1) * _horizontalGapWorld;
 
             var totalHeight =
-                _gridSize * _tileSizeWorld +
-                (_gridSize - 1) * _verticalGapWorld;
+                GridSize * _tileSizeWorld +
+                (GridSize - 1) * _verticalGapWorld;
 
             var startX =
                 -totalWidth * 0.5f +
@@ -1017,11 +1058,44 @@ namespace Project.Scripts.Matas
         /// </summary>
         public TileConnectionType GetRotatedSide(TileSide worldSide)
         {
-            var rotationSteps = Mathf.RoundToInt(Rotation / 90f) % 4;
+            var rot = Mathf.RoundToInt(Rotation / 90f) % 4;
 
-            var localSide = worldSide;
+            var localSide = rot switch
+            {
+                0 => worldSide,
 
-            for (var i = 0; i < rotationSteps; i++) localSide = RotateSideCounterClockwise(localSide);
+                // Tile rotated 90° clockwise
+                1 => worldSide switch
+                {
+                    TileSide.Top => TileSide.Left,
+                    TileSide.Right => TileSide.Top,
+                    TileSide.Bottom => TileSide.Right,
+                    TileSide.Left => TileSide.Bottom,
+                    _ => worldSide
+                },
+
+                // 180°
+                2 => worldSide switch
+                {
+                    TileSide.Top => TileSide.Bottom,
+                    TileSide.Right => TileSide.Left,
+                    TileSide.Bottom => TileSide.Top,
+                    TileSide.Left => TileSide.Right,
+                    _ => worldSide
+                },
+
+                // 270° clockwise
+                3 => worldSide switch
+                {
+                    TileSide.Top => TileSide.Right,
+                    TileSide.Right => TileSide.Bottom,
+                    TileSide.Bottom => TileSide.Left,
+                    TileSide.Left => TileSide.Top,
+                    _ => worldSide
+                },
+
+                _ => worldSide
+            };
 
             return GetSide(localSide);
         }
