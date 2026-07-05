@@ -63,11 +63,6 @@ namespace Project.Scripts.Matas
         public int GridSize { get; private set; }
         public bool IsReady => _tilePrefabs != null && _tileStates != null && GridSize > 0;
 
-        public int WorldTileCount => _tilePrefabs != null ? _tilePrefabs.Length : 0;
-        public int GridSize => _gridSize;
-        public bool IsReady => _tilePrefabs != null && _tileStates != null && _gridSize > 0;
-
-
         private void Start()
         {
             GetUITiles();
@@ -385,36 +380,6 @@ namespace Project.Scripts.Matas
 
             return _tileStates[aIndex]
                 .CanConnect(aSide, _tileStates[bIndex], bSide);
-        }
-
-        public bool TryGetWorldTilePosition(int index, out Vector3 position)
-        {
-            position = Vector3.zero;
-
-            if (_tilePrefabs == null || index < 0 || index >= _tilePrefabs.Length)
-                return false;
-
-            position = _tilePrefabs[index].transform.position;
-            return true;
-        }
-
-        public bool TryGetNeighborIndex(int index, TileSide side, out int neighbor)
-        {
-            neighbor = -1;
-
-            if (_gridSize <= 0 || index < 0 || index >= WorldTileCount)
-                return false;
-
-            neighbor = GetNeighborIndex(index, side);
-            return neighbor >= 0 && neighbor < WorldTileCount;
-        }
-
-        public bool CanMoveBetween(int index, TileSide side, out int neighbor)
-        {
-            if (!TryGetNeighborIndex(index, side, out neighbor))
-                return false;
-
-            return CanConnect(index, side, neighbor);
         }
 
         private int GetNeighborIndex(int index, TileSide side)

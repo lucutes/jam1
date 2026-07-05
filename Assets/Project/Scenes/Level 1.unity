@@ -759,7 +759,7 @@ GameObject:
   m_IsActive: 1
 --- !u!212 &36513355
 SpriteRenderer:
-  serializedVersion: 3
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -816,7 +816,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
-  m_BlendShapeWeights: []
 --- !u!4 &36513356
 Transform:
   m_ObjectHideFlags: 0
@@ -4531,7 +4530,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Matas.Billboard
 --- !u!212 &930563904
 SpriteRenderer:
-  serializedVersion: 3
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4588,7 +4587,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
-  m_BlendShapeWeights: []
 --- !u!1 &931376122
 GameObject:
   m_ObjectHideFlags: 0
@@ -4948,7 +4946,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1013125687
 SpriteRenderer:
-  serializedVersion: 3
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5005,7 +5003,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
-  m_BlendShapeWeights: []
 --- !u!114 &1013125688
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5569,7 +5566,6 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -5945,6 +5941,7 @@ GameObject:
   - component: {fileID: 1299294174}
   - component: {fileID: 1299294176}
   - component: {fileID: 1299294177}
+  - component: {fileID: 1299294178}
   m_Layer: 0
   m_Name: Main Character
   m_TagString: Untagged
@@ -6021,6 +6018,32 @@ Rigidbody:
   m_Interpolate: 2
   m_Constraints: 116
   m_CollisionDetection: 0
+--- !u!114 &1299294178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299294173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bac4fd5267e8fc4e8ff5ce8ecfb51e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Matas.PlayerSightlineVision
+  _viewRadius: 7
+  _innerBrightFraction: 0
+  _rayCount: 160
+  _rayHeight: 0.5
+  _meshHeightOffset: 0.03
+  _obstacleMask:
+    serializedVersion: 2
+    m_Bits: 8
+  _darknessRadius: 60
+  _voidColor: {r: 0, g: 0, b: 0, a: 1}
+  _visionMaterial: {fileID: 2100000, guid: 77501c7280bbc72418b1d4817eb877ee, type: 2}
+  _centerColor: {r: 0.066037714, g: 0.007787465, b: 0.011352084, a: 0.58}
+  _edgeColor: {r: 0, g: 0, b: 0, a: 1}
+  _drawDebug: 1
 --- !u!1 &1321278577
 GameObject:
   m_ObjectHideFlags: 0
@@ -8510,7 +8533,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2011158555}
   m_Enabled: 1
-  serializedVersion: 13
+  serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
@@ -8562,7 +8585,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShapeRadius: 0.025
+  m_ShadowRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
