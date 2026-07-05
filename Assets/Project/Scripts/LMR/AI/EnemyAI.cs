@@ -26,6 +26,8 @@ namespace Project.Scripts.Matas
         [SerializeField] private bool _requireViewAngle;
         [SerializeField] private float _arrivalDistance = 0.08f;
         [SerializeField] private float _repathInterval = 0.5f;
+        [SerializeField] private float _obstacleAvoidanceRadius = 0.25f;
+        [SerializeField] private float _tileBoundaryPadding = 0.65f;
         [SerializeField] private LayerMask _obstacleMask;
 
         [Header("Debug")]
@@ -172,8 +174,75 @@ namespace Project.Scripts.Matas
             if (direction.magnitude <= _arrivalDistance)
                 return;
 
-            _lookDirection = direction.normalized;
-            _rb.MovePosition(_rb.position + _lookDirection * _moveSpeed * Time.fixedDeltaTime);
+            var distance = Mathf.Min(_moveSpeed * Time.fixedDeltaTime, direction.magnitude);
+
+            if (!TryGetMoveDirection(direction.normalized, distance, out var moveDirection))
+                return;
+
+            _lookDirection = moveDirection;
+            _rb.MovePosition(_rb.position + moveDirection * distance);
+        }
+
+        private bool TryGetMoveDirection(Vector3 desiredDirection, float distance, out Vector3 moveDirection)
+        {
+            moveDirection = desiredDirection;
+
+            if (CanMoveInDirection(desiredDirection, distance))
+                return true;
+
+            float[] angles = { 25f, -25f, 45f, -45f, 70f, -70f, 90f, -90f };
+
+            foreach (var angle in angles)
+            {
+                var candidate = Quaternion.AngleAxis(angle, Vector3.up) * desiredDirection;
+
+                if (!CanMoveInDirection(candidate, distance))
+                    continue;
+
+                moveDirection = candidate.normalized;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool CanMoveInDirection(Vector3 direction, float distance)
+        {
+            var nextPosition = _rb.position + direction.normalized * distance;
+
+            if (!IsInsideTileBounds(nextPosition))
+                return false;
+
+            if (_obstacleMask == 0)
+                return true;
+
+            var origin = transform.position + Vector3.up * 0.5f;
+            return !Physics.SphereCast(origin, _obstacleAvoidanceRadius, direction, out _, distance, _obstacleMask);
+        }
+
+        private bool IsInsideTileBounds(Vector3 position)
+        {
+            if (_tiles == null || _tiles.WorldTileCount == 0)
+                return true;
+
+            var minX = float.MaxValue;
+            var maxX = float.MinValue;
+            var minZ = float.MaxValue;
+            var maxZ = float.MinValue;
+
+            for (var i = 0; i < _tiles.WorldTileCount; i++)
+            {
+                var tilePosition = GetTileWorldPosition(i);
+                minX = Mathf.Min(minX, tilePosition.x);
+                maxX = Mathf.Max(maxX, tilePosition.x);
+                minZ = Mathf.Min(minZ, tilePosition.z);
+                maxZ = Mathf.Max(maxZ, tilePosition.z);
+            }
+
+            return position.x >= minX - _tileBoundaryPadding &&
+                   position.x <= maxX + _tileBoundaryPadding &&
+                   position.z >= minZ - _tileBoundaryPadding &&
+                   position.z <= maxZ + _tileBoundaryPadding;
         }
 
         private Vector3 GetFlatDirectionTo(Vector3 targetPosition)
